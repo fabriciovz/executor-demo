@@ -46,17 +46,36 @@ awaitTermination() [*]
 Future--stores data received by submit
 submit(new Runnable()) [*] returns null
 submit(new Callable()) [*] returns data
-invokeAny()
-invokeAll()
+invokeAny() returns only single data from  list of callable object
+invokeAll() returns list of future objects
  */
 
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
-        invokeAnySample();
+        invokeAllSample();
+        //invokeAnySample();
         //submitCallableSample();
         //submitRunnableSample();
         //executeSample();
+    }
+    public static void invokeAllSample() throws InterruptedException, ExecutionException {
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        System.out.println(new Date());
+        List<Callable<String>> callableList = new ArrayList<>();
+        callableList.add(new Service2(1));
+        callableList.add(new Service2(2));
+        callableList.add(new Service2(3));
+        callableList.add(new Service2(4));
+        callableList.add(new Service2(5));
+        List<Future<String>> futureList= executorService.invokeAll(callableList);//it returns only one future data
+//it can be any from the list of data from callable
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.SECONDS); //wait till here
+        System.out.println("======================");
+        for(Future<String> fut:futureList)
+            System.out.println(fut.get());
+        System.out.println(new Date());
     }
     public static void invokeAnySample() throws InterruptedException, ExecutionException {
         ExecutorService executorService = Executors.newFixedThreadPool(2);
