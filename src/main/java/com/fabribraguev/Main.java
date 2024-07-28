@@ -1,9 +1,9 @@
 package com.fabribraguev;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.concurrent.*;
 
 class Service implements Runnable {
     int i;
@@ -13,7 +13,7 @@ class Service implements Runnable {
 
     @Override
     public void run() {
-        System.out.println(i + " ");
+        System.out.println("In thread: "+i);
         try {
             Thread.sleep(1000); //1 sec
         } catch (InterruptedException e) {
@@ -28,7 +28,8 @@ ExecutorService:
 execute() [*]
 shutDown() [*]
 awaitTermination() [*]
-submit(new Runnable())
+Future--stores data received by submit
+submit(new Runnable()) [*] returns null
 submit(new Callable())
 invokeAny()
 invokeAll()
@@ -36,14 +37,38 @@ invokeAll()
 
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        submitSample();
+
+        //executeSample();
+    }
+    public static void submitSample() throws InterruptedException, ExecutionException {
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        System.out.println(new Date());
+        List<Future<String>> futureList = new ArrayList<>();
+        for(int i=0;i<25;i++){
+            futureList.add((Future<String>) executorService.submit(new Service(i)));
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.SECONDS); //wait till here
+        System.out.println("======================");
+        for(Future<String> fut:futureList)
+            System.out.println(fut.get());
+        System.out.println(new Date());
+
+    }
+    public static void executeSample(){
         ExecutorService executorService = Executors.newFixedThreadPool(5);
         System.out.println(new Date());
         for(int i=0;i<25;i++){
             executorService.execute(new Service(i));
         }
         executorService.shutdown();
-        executorService.awaitTermination(10, TimeUnit.SECONDS); //wait till here
+        try {
+            executorService.awaitTermination(10, TimeUnit.SECONDS); //wait till here
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         System.out.println(new Date());
     }
 }
